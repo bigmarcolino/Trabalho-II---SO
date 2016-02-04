@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #define N_PAGINAS 50
 #define N_THREADS 20
@@ -34,7 +35,7 @@ void* aloca_paginas(void *arg)
     {
         //TO DO
 
-        delay(3000);
+        sleep(3);
     }
 
     free(mv);
@@ -58,7 +59,7 @@ int main(int argc, char *argv[])
             exit(-1);
         }
 
-        delay(3000);
+        sleep(3);
     }
 
     //aguarda todas as threads terminarem
