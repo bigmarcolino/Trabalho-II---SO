@@ -6,6 +6,7 @@
 #define N 6
 #define N_THREADS 3
 
+
 typedef struct {
     pthread_t thread;
     int start;
