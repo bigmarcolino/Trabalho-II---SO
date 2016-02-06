@@ -10,6 +10,9 @@
 
 int* mp; //memória principal
 
+//testando commit pelo Atom - igor
+
+
 //imprime as páginas contidas em cada frame da memória principal
 void printMP(int* mp)
 {
@@ -52,7 +55,7 @@ int main(int argc, char *argv[])
 
     //criação das threads, com delay de 3 segundos
     for(i = 0; i < N_THREADS; i++)
-    {   
+    {
         if (pthread_create(&thread[i], NULL, aloca_paginas, NULL))
         {
             printf("--ERRO: pthread_create()\n");
@@ -68,7 +71,7 @@ int main(int argc, char *argv[])
         if (pthread_join(thread[i], NULL))
         {
             printf("--ERRO: pthread_join() \n");
-            exit(-1); 
+            exit(-1);
         }
     }
 
