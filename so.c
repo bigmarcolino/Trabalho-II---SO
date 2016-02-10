@@ -28,13 +28,30 @@ void printMP()
     printf("\n");
 }
 
+void printIndicesMP(int* indices)
+{
+    int i;
+
+    printf("[");
+    for(i = 0; i < WSL; i++)
+    {
+        if(i < WSL-1)
+            printf("%d, ", indices[i]);
+        else
+            printf("%d]\n", indices[i]);
+    }
+
+    printf("\n");
+}
+
+
 //função responsável por alocar as páginas na memória
 //será chamada por cada thread
 void* aloca_paginas(void *threadid)
 {
     int *id = (int*)threadid;
     int i;
-    int qtd_paginas_mp = 0;    
+    int qtd_paginas_mp = 0;
     int* indiceMP = (int*)malloc(WSL*sizeof(int)); //vetor com os índices
 
     //colocar -1 no vetor de índices, para indicar que as posições estão vazias
@@ -47,7 +64,7 @@ void* aloca_paginas(void *threadid)
 
     //for que controla as tentativas de alocação de página, com delay de 3 segundos
     for (i = 0; i < N_PAGINAS; i++)
-    {   
+    {
         pthread_mutex_lock(&mutex);
 
         printf("Processo %d\n", *id);
@@ -63,8 +80,9 @@ void* aloca_paginas(void *threadid)
             indiceMP[qtd_paginas_mp] = next_index;
             next_index++;
             qtd_paginas_mp++;
-        }        
-
+        }
+        printf("Vetor de indices na MP: ");
+        printIndicesMP(indiceMP);
         pthread_mutex_unlock(&mutex);
 
         sleep(3);
@@ -90,7 +108,7 @@ int main(int argc, char *argv[])
         {
             pthread_exit(NULL);
             return 1;
-        }   
+        }
         *id=i;
 
         if (pthread_create(&thread[i], NULL, aloca_paginas, (void *)id))
