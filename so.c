@@ -8,10 +8,9 @@
 #define N_FRAMES 64
 #define WSL 4 //working set limit
 
+#define VAZIO -1
+
 int* mp; //memória principal
-
-//testando commit pelo Atom - igor
-
 
 //imprime as páginas contidas em cada frame da memória principal
 void printMP(int* mp)
@@ -31,17 +30,21 @@ void printMP(int* mp)
 void* aloca_paginas(void *arg)
 {
     int i;
-    int* mv = (int*)malloc(WSL*sizeof(int)); //memória virtual
+    int* indiceMP = (int*)malloc(WSL*sizeof(int)); //vetor com os índices
+
+    //colocar -1 no vetor de índices, para indicar que as posições estão vazias
+    for (i = 0; i < WSL; i++)
+    {
+        indiceMP[i] = VAZIO;
+    }
 
     //for que controla as tentativas de alocação de página, com delay de 3 segundos
     for (i = 0; i < N_PAGINAS; i++)
     {
-        //TO DO
-
+        
+        
         sleep(3);
     }
-
-    free(mv);
 
     pthread_exit(NULL);
 }
