@@ -6,7 +6,7 @@
 #define N_PAGINAS 10
 #define N_THREADS 1
 #define N_FRAMES 10
-//////////////////
+
 #define WSL 4 //working set limit
 #define VAZIO -1 //representa posição vazia no vetor
 #define MAX 20 //MAX-1 será o maior número de página gerado aleatoriamente
