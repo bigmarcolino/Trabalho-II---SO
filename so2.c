@@ -6,7 +6,7 @@
 #define N_PAGINAS 10
 #define N_THREADS 1
 #define N_FRAMES 10
-
+//////////////////
 #define WSL 4 //working set limit
 #define VAZIO -1 //representa posição vazia no vetor
 #define MAX 20 //MAX-1 será o maior número de página gerado aleatoriamente
@@ -36,6 +36,28 @@ void printIndiceMP(int* indiceMP)
     for(i = 0; i < WSL; i++)
     {
         printf("%d ", indiceMP[i]);
+    }
+
+    printf("\n");
+}
+
+//print do igor
+void printIndicesMP(int* indices)
+{
+    int i;
+
+    printf("{[PV, indice na MP]}\n");
+    printf("{");
+    for(i = 0; i < WSL; i++)
+    {
+        if(i < WSL-1){
+            printf("[%d, ", mp[indices[i]]);
+            printf("%d]\n", indices[i] );
+        }
+        else{
+            printf("[%d, ", mp[indices[i]]);
+            printf("%d]}\n", indices[i]);
+        }
     }
 
     printf("\n");
@@ -78,7 +100,9 @@ void* aloca_paginas(void *threadid)
         //número de página gerado aleatoriamente
         numero_pagina = rand() % MAX;
 
-        printf("%d\n", numero_pagina);
+        printf("\nProcesso %d\n", *id);
+
+        printf("Número da página: %d\n", numero_pagina);
 
         //verifica se o número gerado está na memória
         for (int i = 0; i < qtd_paginas_mp; i++)
@@ -146,8 +170,10 @@ void* aloca_paginas(void *threadid)
 
         contem = 0;
 
+        printf("Vetor de índices: ");
         printIndiceMP(indiceMP);
 
+        printf("Memória principal: ");
         printMP();
 
         pthread_mutex_unlock(&mutex);
@@ -181,7 +207,8 @@ int main(int argc, char *argv[])
         {
             pthread_exit(NULL);
             return 1;
-        }   
+        }
+
         *id=i;
 
         if (pthread_create(&thread[i], NULL, aloca_paginas, (void *)id))
