@@ -13,7 +13,7 @@
 
 int* mp; //memória principal
 int next_index = 0; //índice da memória que será alocado
-pthread_mutex_t mutex; //exclusão mútua
+pthread_mutex_t mutex; //exclusão mútua o LR
 
 //imprime as páginas contidas em cada frame da memória principal
 void printMP()
@@ -32,13 +32,18 @@ void printIndicesMP(int* indices)
 {
     int i;
 
-    printf("[");
+    printf("{[PV, indice na MP]}\n");
+    printf("{");
     for(i = 0; i < WSL; i++)
     {
-        if(i < WSL-1)
-            printf("%d, ", indices[i]);
-        else
-            printf("%d]\n", indices[i]);
+        if(i < WSL-1){
+            printf("[%d, ", mp[indices[i]]);
+            printf("%d]\n", indices[i] );
+        }
+        else{
+            printf("[%d, ", mp[indices[i]]);
+            printf("%d]}\n", indices[i]);
+        }
     }
 
     printf("\n");
@@ -81,7 +86,7 @@ void* aloca_paginas(void *threadid)
             next_index++;
             qtd_paginas_mp++;
         }
-        printf("Vetor de indices na MP: ");
+        printf("Tabela de Paginas Virtuais:\n");
         printIndicesMP(indiceMP);
         pthread_mutex_unlock(&mutex);
 
