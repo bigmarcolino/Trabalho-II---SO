@@ -163,7 +163,7 @@ void* aloca_paginas(void *threadid)
 
         //verifica se o processo atual está na matriz de swap
         //caso esteja, o if faz os swaps necessários
-        if (swap[*id][0] != -1)
+        if (swap[*id][0] != -1) //se existe alguma pagina do processo no swap/ se o processo estah no swap
         {
             int n_frames_necessarios = 0;
             int n_frames_livres = 0;
@@ -202,25 +202,27 @@ void* aloca_paginas(void *threadid)
                         break;
                     }
 
-                    swap[proc_mais_antigo][j] = mp[indice];
+                    swap[proc_mais_antigo][j] = mp[indice];// guardamos a pagina do processo
                     mp[indice] = -1;
                 }
 
-                int aux = 1;
+                int aux = 0;
+				int aux2 = 0;
 
                 //shift
-                for (j = 0; j < N_THREADS; j++)
+                for (j = 1; j < N_THREADS; j++)
                 {
-                    if (vetorProcessos[aux] == -1)
-                    {
-                        break;
-                    }
+				   aux2 = j;
+                   if (vetorProcessos[j] == -1)
+                   {
+                       break;
+                   }
 
-                    vetorProcessos[j] = vetorProcessos[aux];
-                    aux++;
+                       vetorProcessos[aux] = vetorProcessos[j];
+                       aux++;
                 }
 
-                vetorProcessos[aux-1] = -1;
+                vetorProcessos[aux2] = -1;
 
                 printMP();
                 printVetorProcessos();
@@ -238,7 +240,7 @@ void* aloca_paginas(void *threadid)
                 }
              }
              //no fim do while, count >= n_frames_necessarios ou seja, aqui o processo cabe no espaço livre
-             //para cada pagina que vai ser colocada na mp, gravar as posicoes correspondentes no vtor mp e matriz indiceMP 
+             //para cada pagina que vai ser colocada na mp, gravar as posicoes correspondentes no vetor mp e matriz indiceMP 
             int y = 0;
 
             for(z = 0; z < N_FRAMES; z++)
@@ -250,9 +252,10 @@ void* aloca_paginas(void *threadid)
                         break;
                     }
 
-                    mp[z] = swap[*id][y];
-                    swap[*id][y] = -1;
-                    indiceMP[*id][y] = z;
+                    mp[z] = swap[*id][y];//memoria recebe a pagina do processo
+					//printf("pagina %d do processo %d entrou na posicao indice= %d da mp", y, *id, z);
+					indiceMP[*id][y] = z; //pagina do processo recebe seu novo indice na mp
+                    swap[*id][y] = -1; //apaga a pagina do swap
                     y++;
                 }
             }
@@ -271,6 +274,7 @@ void* aloca_paginas(void *threadid)
             //atualizar indiceMP
             //zerar as posicoes que ficaram livres do swap
         }
+		//FIM DO IF DE VERIFICAÇÃO SE PROCESSO ESTÁ N SWAP
 
         int count = 0;
 
@@ -398,31 +402,42 @@ void* aloca_paginas(void *threadid)
                         for(j = 0; j < WSL; j++)
                         {
                             int indice = indiceMP[proc_mais_antigo][j];
-
+							//se o processo tem alguma posição de pag vazia, sai do for
                             if(indice == -1)
                             {
                                 break;
                             }
-
+							//se nao, guarda no swap o indice que esse processo estava usando na mp
                             swap[proc_mais_antigo][j] = mp[indice];
-                            mp[indice] = -1;
+                            mp[indice] = -1; //libera o espaco na memoria principal
                         }
 
-                        int aux = 1;
+						//alocar a pagina que quer entrar
+						for(j = 0; j<N_FRAMES; j++){
+							if(mp[j] == -1){
+								mp[j] = numero_pagina;
+								printf("pagina %d entrou na memoria na posicao %d\n", numero_pagina, j);
+								break;// sai do for pq ja alocou a pag
+							}
+						}
+
+                        int aux = 0;
+						int aux2 = 0;
 
                         //shift
-                        for (j = 0; j < N_THREADS; j++)
+                        for (j = 1; j < N_THREADS; j++)
                         {
-                            if (vetorProcessos[aux] == -1)
+							aux2 = j;
+                            if (vetorProcessos[j] == -1)
                             {
                                 break;
                             }
 
-                            vetorProcessos[j] = vetorProcessos[aux];
+                            vetorProcessos[aux] = vetorProcessos[j];
                             aux++;
                         }
 
-                        vetorProcessos[aux-1] = -1;
+                        vetorProcessos[aux2] = -1;
 
                         printMP();
                         printVetorProcessos();
