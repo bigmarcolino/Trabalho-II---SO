@@ -104,7 +104,7 @@ void* aloca_paginas(void *threadid)
     int *id = (int*)threadid;
     vetorProcessos[next_index_VP] = *id;
     next_index_VP++;
-    
+
     pthread_mutex_unlock(&mutex);
 
     int i, j, k;
@@ -133,7 +133,18 @@ void* aloca_paginas(void *threadid)
     //4--- se o WSL for atingido, a página mais antiga na MP será substituída pela página nova e o vetor de índices atualizado
     //5--- caso contrário, a página é colaca na MP, pois há espaço
     for (i = 0; i < N_PAGINAS; i++)
-    {   
+    {
+        //***antes de tentar inserir uma página na MP, primeiramente devemos saber se o processo em execução está na matriz de swap
+        //***caso negativo, a execução pode continuar normalmente
+        //***caso positivo, devemos retirar o processo mais antigo da MP (vetorProcessos[0]) e colocá-lo na matriz de swap (swap in)
+        //***depois do passo acima, mover o processo em execução do swap para a memória principal (swap out)
+        //***pode haver o caso que o processo que vai sair da memória tem menos páginas que o processo que vai entrar
+        //***portanto, concluímos que pode haver mais de um swap in
+        //***por isso, devemos analisar se após um swap in vai haver espaço suficiente na MP para alocar todas as páginas do processo que vai entrar
+        //***caso não haja, fazer mais um swap in e verificar se há espaço suficiente, e assim sucessivamente
+        //***no pior dos casos, haverão 4 swap in, que é o caso que o processo que vai entrar na MP tem 4 páginas e os 4 mais antigos na MP que vão sair têm uma página cada
+        //*** após os swaps, ter cuidado para manter o vetor de índices atualizados, pois isso afeta a execução correta do LRU
+
         pthread_mutex_lock(&mutex);
 
         //número de página gerado aleatoriamente
@@ -197,13 +208,21 @@ void* aloca_paginas(void *threadid)
             }
             else
             {
-                //verificar aqui a necessidade de swap out
-                //outra alteração que deve ser feita é, antes de tentar alocar uma página, verificar se está no swap
-
-                mp[next_index_MP] = numero_pagina;
-                indiceMP[qtd_paginas_mp] = next_index_MP;
-                next_index_MP++;
-                qtd_paginas_mp++;
+                //enquanto o next_index_MP é menor que o tamanho da MP, as inserções são sequenciais
+                if(next_index_MP < N_FRAMES)
+                {
+                    mp[next_index_MP] = numero_pagina;
+                    indiceMP[qtd_paginas_mp] = next_index_MP;
+                    next_index_MP++;
+                    qtd_paginas_mp++;
+                }
+                else
+                {   
+                    //***aqui a memória pode não estar cheia, verificar
+                    //***retirar o processo mais antigo da memória (vetorProcessos[0]) e colocá-lo na matriz de swap (swap in)
+                    //***denota-se retirar um processo da memória como mover suas respectivas páginas da memória princiapl para a matriz de swap
+                    //***como uma página é adicionada na memória por vez, ao mover o processo mais antigo para o swap, é garantido que haverá espaço suficiente na MP para alocar a página
+                }
             }
         }
 
