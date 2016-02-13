@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <unistd.h>
 
+//testando push igorBranch
+
 #define N_PAGINAS 10
 #define N_THREADS 2
 #define N_FRAMES 10
@@ -56,7 +58,7 @@ void printSwap()
             printf("%d ", swap[i][j]);
         }
 
-        printf("\n");        
+        printf("\n");
     }
 }
 
@@ -108,7 +110,7 @@ void* aloca_paginas(void *threadid)
     pthread_mutex_unlock(&mutex);
 
     int i, j, k;
-    int qtd_paginas_mp = 0;    
+    int qtd_paginas_mp = 0;
     int numero_pagina;
     int contem = 0;
 
@@ -167,11 +169,11 @@ void* aloca_paginas(void *threadid)
                 k = 0;
 
                 for (j = 0; j < qtd_paginas_mp; j++)
-                { 
+                {
                     if(indiceMP[j] != indice_mp)
                     {
                         indiceMP[k] = indiceMP[j];
-                        k++;   
+                        k++;
                     }
                     else
                     {
@@ -198,13 +200,13 @@ void* aloca_paginas(void *threadid)
                 k = 0;
 
                 for (j = 1; j < qtd_paginas_mp; j++)
-                { 
+                {
                     indiceMP[k] = indiceMP[j];
-                    k++;   
+                    k++;
                 }
 
                 indiceMP[qtd_paginas_mp-1] = aux;
-                mp[aux] = numero_pagina;    
+                mp[aux] = numero_pagina;
             }
             else
             {
@@ -217,7 +219,7 @@ void* aloca_paginas(void *threadid)
                     qtd_paginas_mp++;
                 }
                 else
-                {   
+                {
                     //***aqui a memória pode não estar cheia, verificar
                     //***retirar o processo mais antigo da memória (vetorProcessos[0]) e colocá-lo na matriz de swap (swap in)
                     //***denota-se retirar um processo da memória como mover suas respectivas páginas da memória princiapl para a matriz de swap
@@ -325,7 +327,7 @@ int main(int argc, char *argv[])
         free(swap[i]);
     }
 
-    free(swap);    
+    free(swap);
 
     //desaloca o lock de exclusão mútua
     pthread_mutex_destroy(&mutex);
