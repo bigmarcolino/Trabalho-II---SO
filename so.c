@@ -3,19 +3,17 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#define N_PAGINAS 4
+#define N_PAGINAS 6
 #define N_THREADS 4
-#define N_FRAMES 5
+#define N_FRAMES 10
 
-#define WSL 2 //working set limit
+#define WSL 4 //working set limit
 #define VAZIO -1 //representa posição vazia no vetor
 #define MAX 20 //MAX-1 será o maior número de página gerado aleatoriamente
 
 int* mp; //memória principal
 int* vetorProcessos; //vetor que indica a ordem de execução dos processos
-
-//matriz de swap
-int** swap; 
+int** swap; //matriz de swap
 
 //matriz com os índices da MP onde estão as páginas dos processos
 //a linha i da matriz representa o processo i
@@ -36,9 +34,7 @@ void printMP()
     printf("Memória principal: ");
 
     for(i = 0; i < N_FRAMES; i++)
-    {
         printf("%d ", mp[i]);
-    }
 
     printf("\n");
 }
@@ -51,9 +47,7 @@ void printVetorProcessos()
     printf("Vetor de processos: ");
 
     for(i = 0; i < N_THREADS; i++)
-    {
         printf("%d ", vetorProcessos[i]);
-    }
 
     printf("\n");
 }
@@ -65,16 +59,12 @@ void printSwap()
 
     printf("\nMatriz de swap\n");
 
-    for(i = 0; i < N_THREADS; i++)
-    {
+    for(i = 0; i < N_THREADS; i++) {
         for (j = 0; j < WSL; j++)
-        {
             printf("%d ", swap[i][j]);
-        }
 
         printf("\n");        
-    }	
-	printf("\n");
+    }
 }
 
 //imprime a matriz de índices de todos os processo
@@ -82,14 +72,11 @@ void printIndiceMP()
 {
     int i, j;
 
-    printf("\nMatriz de índices utilizados da mp\n");
+    printf("\nMatriz de índices\n");
 
-    for(i = 0; i < N_THREADS; i++)
-    {
+    for(i = 0; i < N_THREADS; i++) {
         for (j = 0; j < WSL; j++)
-        {
             printf("%d ", indiceMP[i][j]);
-        }
 
         printf("\n");
     }
@@ -103,9 +90,7 @@ void printIndiceMPLinha(int id)
     printf("Vetor de índices: ");
 
     for (i = 0; i < WSL; i++)
-    {
         printf("%d ", indiceMP[id][i]);
-    }
 
     printf("\n");
 }
@@ -129,8 +114,7 @@ void* aloca_paginas(void *threadid)
     //3--- se o número (página) não existir na MP, haverão duas possibilidades: WSL atingido ou não
     //4--- se o WSL for atingido, a página mais antiga na MP será substituída pela página nova e o vetor de índices atualizado
     //5--- caso contrário, a página é colaca na MP, pois há espaço
-    for (i = 0; i < N_PAGINAS; i++)
-    {
+    for (i = 0; i < N_PAGINAS; i++) {
         //***antes de tentar inserir uma página na MP, primeiramente devemos saber se o processo em execução está na matriz de swap
         //***caso negativo, a execução pode continuar normalmente
         //***caso positivo, devemos retirar o processo mais antigo da MP (vetorProcessos[0]) e colocá-lo na matriz de swap (swap out)
@@ -151,32 +135,24 @@ void* aloca_paginas(void *threadid)
         numero_execucao++;
 
         printf("\nProcesso %d\n", *id);
-
         printf("Número da página: %d\n", numero_pagina);
 
         //verifica se o processo atual está na matriz de swap
         //caso esteja, o if faz os swaps necessários
-        if (swap[*id][0] != -1)
-        {
+        if (swap[*id][0] != -1) {
             int n_frames_necessarios = 0;
             int n_frames_livres = 0;
 
             //verifica quantos frames o processo precisa
-            for(z = 0; z < WSL; z++)
-            {
+            for(z = 0; z < WSL; z++) {
                 if(swap[*id][z] != -1)
-                {
                     n_frames_necessarios++;
-                }
             }
 
             //contar quantos espaços livres existem na mp
-            for(z = 0; z < N_FRAMES; z++)
-            {
+            for(z = 0; z < N_FRAMES; z++) {
                 if(mp[z] == -1)
-                {
                     n_frames_livres++;
-                }
             }
 
             printVetorProcessos();
@@ -184,26 +160,20 @@ void* aloca_paginas(void *threadid)
             printf("Há %d frames livres na memória\n", n_frames_livres);
 
             //enquanto não houver espaço suficiente na memória para que o processo possa entrar, o processo mais antigo é retirado da memória
-            while(n_frames_livres < n_frames_necessarios)
-            {
+            while(n_frames_livres < n_frames_necessarios) {
                 int proc_mais_antigo = vetorProcessos[0];
 
                 if (proc_mais_antigo == *id)
-                {
                     proc_mais_antigo = vetorProcessos[1];
-                }
 
-                printf("Processo %d sofre swap out\n", proc_mais_antigo);
+                printf("Swap out. Processo %d tem que sair da MP\n", proc_mais_antigo);
 
                 //swap out
-                for(j = 0; j < WSL; j++)
-                {
+                for(j = 0; j < WSL; j++) {
                     int indice = indiceMP[proc_mais_antigo][j];
 
                     if(indice == -1)
-                    {
                         break;
-                    }
 
                     swap[proc_mais_antigo][j] = mp[indice];
                     mp[indice] = -1;
@@ -211,61 +181,52 @@ void* aloca_paginas(void *threadid)
 
                 //coloca -1 nos índices do processo que saiu
                 for(j = 0; j < WSL; j++)
-                {
                     indiceMP[proc_mais_antigo][j] = -1;
-                }
 
                 int aux = 1;
 
-                printMP();
                 //shift no vetor de processos, retirando o processo que saiu
-                for (j = 0; j < N_THREADS; j++)
-                {
-                    if (vetorProcessos[aux] == -1)
-                    {
-                        break;
+                for (j = 0; j < N_THREADS; j++) {
+                    if (j == 0 && vetorProcessos[j] == *id) {
+                       aux++;
+                       continue;
                     }
+
+                    if (vetorProcessos[aux] == -1)
+                        break;
 
                     vetorProcessos[j] = vetorProcessos[aux];
                     aux++;
 
                     if(aux > N_THREADS)
-                    {
                         aux = N_THREADS;
-                    }
                 }
 
                 vetorProcessos[aux-1] = -1;
 
-
+                printMP();
                 printVetorProcessos();
                 printSwap();   
 
                 n_frames_livres = 0;
 
                 //contar quantos espaços livres ha na mp
-                for(z = 0; z < N_FRAMES; z++)
-                {
+                for(z = 0; z < N_FRAMES; z++) {
                     if(mp[z] == -1)
-                    {
                         n_frames_livres++;
-                    }
                 }
 
                 printf("Agora há %d frames livres na memória\n", n_frames_livres);
-             }
-             //no fim do while, count >= n_frames_necessarios ou seja, aqui o processo cabe no espaço livre
-             //para cada pagina que vai ser colocada na mp, gravar as posicoes correspondentes no vtor mp e matriz indiceMP 
+            }
+            //no fim do while, count >= n_frames_necessarios ou seja, aqui o processo cabe no espaço livre
+            //para cada pagina que vai ser colocada na mp, gravar as posicoes correspondentes no vtor mp e matriz indiceMP 
+            
             int y = 0;
 
-            for(z = 0; z < N_FRAMES; z++)
-            {
-                if(mp[z] == -1)
-                {
+            for(z = 0; z < N_FRAMES; z++) {
+                if(mp[z] == -1) {
                     if (swap[*id][y] == -1)
-                    {
                         break;
-                    }
 
                     mp[z] = swap[*id][y];
                     swap[*id][y] = -1;
@@ -273,23 +234,19 @@ void* aloca_paginas(void *threadid)
                     y++;
 
                     if (y == WSL)
-                    {
                         break;
-                    }
                 }
             }
 
             //atualizar vetorProcessos
-            for(z = 0; z < N_THREADS; z++)
-            {
-                if(vetorProcessos[z] == -1)
-                {
+            for(z = 0; z < N_THREADS; z++) {
+                if(vetorProcessos[z] == -1) {
                     vetorProcessos[z] = *id;
                     break;
                 }
             }
 
-            printf("Processo %d sofre swap in.\n", *id);
+            printf("Processo %d entrou na memória\n", *id);
             printVetorProcessos();
             printSwap();
 
@@ -302,21 +259,16 @@ void* aloca_paginas(void *threadid)
 
         //verifica se o número do processo já está no vetor
         //alterar variável
-        for (z = 0; z < N_THREADS; z++)
-        {
-            if (vetorProcessos[z] == *id)
-            {
+        for (z = 0; z < N_THREADS; z++) {
+            if (vetorProcessos[z] == *id) {
                 count = 1;
                 break;
             }
         }
 
-        if (count == 0)
-        {
-            for (z = 0; z < N_THREADS; z++)
-            {
-                if (vetorProcessos[z] == -1)
-                {
+        if (count == 0) {
+            for (z = 0; z < N_THREADS; z++) {
+                if (vetorProcessos[z] == -1) {
                     vetorProcessos[z] = *id;
                     break;
                 }
@@ -324,26 +276,21 @@ void* aloca_paginas(void *threadid)
         }
 
         //verifica se o número gerado está na memória
-        for (j = 0; j < qtd_paginas_mp; j++)
-        {
+        for (j = 0; j < qtd_paginas_mp; j++) {
             int indice_mp = indiceMP[*id][j];
 
             //se estiver na mp, o vetor de índices é atualizado
-            if(mp[indice_mp] == numero_pagina)
-            {
+            if(mp[indice_mp] == numero_pagina) {
                 contem = 1;
 
                 k = 0;
 
-                for (w = 0; w < qtd_paginas_mp; w++)
-                { 
-                    if(indiceMP[*id][w] != indice_mp)
-                    {
+                for (w = 0; w < qtd_paginas_mp; w++) { 
+                    if(indiceMP[*id][w] != indice_mp) {
                         indiceMP[*id][k] = indiceMP[*id][w];
                         k++;   
                     }
-                    else
-                    {
+                    else {
                         w++;
                         indiceMP[*id][k] = indiceMP[*id][w];
                         k++;
@@ -351,23 +298,18 @@ void* aloca_paginas(void *threadid)
                 }
 
                 indiceMP[*id][qtd_paginas_mp-1] = indice_mp;
-
                 break;
             }
         }
 
         //se não está na memória, colocar na memória
-        if(contem == 0)
-        {
+        if(contem == 0) {
             //reorganiza o vetor indiceMP, quando a quantidade de páginas do processo é igual ao WSL
-            if(qtd_paginas_mp == WSL)
-            {
+            if(qtd_paginas_mp == WSL) {
                 int aux = indiceMP[*id][0];
-
                 k = 0;
 
-                for (j = 1; j < qtd_paginas_mp; j++)
-                { 
+                for (j = 1; j < qtd_paginas_mp; j++) { 
                     indiceMP[*id][k] = indiceMP[*id][j];
                     k++;   
                 }
@@ -375,66 +317,51 @@ void* aloca_paginas(void *threadid)
                 indiceMP[*id][qtd_paginas_mp-1] = aux;
                 mp[aux] = numero_pagina;    
             }
-            else
-            {
+            else {
                 //enquanto o next_index_MP é menor que o tamanho da MP, as inserções são sequenciais
-                if(next_index_MP < N_FRAMES)
-                {
+                if(next_index_MP < N_FRAMES) {
                     mp[next_index_MP] = numero_pagina;
                     indiceMP[*id][qtd_paginas_mp] = next_index_MP;
                     next_index_MP++;
                     qtd_paginas_mp++;
                 }
-                else
-                {   
+                else {   
                     int cheio = 1;
 
-                    for (j = 0; j < N_FRAMES; j++)
-                    {
-                        if (mp[j] == -1)
-                        {
+                    for (j = 0; j < N_FRAMES; j++) {
+                        if (mp[j] == -1) {
                             cheio = 0;
                             mp[j] = numero_pagina;
                             indiceMP[*id][qtd_paginas_mp] = j;
                             qtd_paginas_mp++;
 
-                            //printf("Não foi necessário tirar um processo da memória, pois existe espaço para alocar a página\n");
-
+                            printf("Não foi necessário tirar um processo da memória, pois existe espaço para alocar a página\n");
                             break;
                         }
                     }
 
                     //swap out
-                    if (cheio == 1)
-                    {
+                    if (cheio == 1) {
                         int proc_mais_antigo = vetorProcessos[0];
 
                         if (proc_mais_antigo == *id)
-                        {
                             proc_mais_antigo = vetorProcessos[1];
-                        }
 
-                        printf("Processo %d sofre swap out.\n", proc_mais_antigo);
+                        printf("Processo %d tem que sair da MP\n", proc_mais_antigo);
 
-                        for(j = 0; j < WSL; j++)
-                        {
+                        for(j = 0; j < WSL; j++) {
                             int indice = indiceMP[proc_mais_antigo][j];
 
                             if(indice == -1)
-                            {
                                 break;
-                            }
 
                             swap[proc_mais_antigo][j] = mp[indice];
                             mp[indice] = -1;
                         }
 
-                        printMP();
                         //aloca a página na memória
-                        for (z = 0; i < N_FRAMES; z++)
-                        {
-                            if (mp[z] == -1)
-                            {
+                        for (z = 0; i < N_FRAMES; z++) {
+                            if (mp[z] == -1) {
                                 mp[z] = numero_pagina;
                                 indiceMP[*id][qtd_paginas_mp] = z;
                                 qtd_paginas_mp++;
@@ -444,32 +371,30 @@ void* aloca_paginas(void *threadid)
 
                         //coloca -1 nos índices do processo que saiu
                         for(j = 0; j < WSL; j++)
-                        {
                             indiceMP[proc_mais_antigo][j] = -1;
-                        }
 
                         int aux = 1;
 
                         //shift no vetor de processos, retirando o processo que saiu
-                        for (j = 0; j < N_THREADS; j++)
-                        {
-                            if (vetorProcessos[aux] == -1)
-                            {
-                                break;
+                        for (j = 0; j < N_THREADS; j++) {
+                            if (j == 0 && vetorProcessos[j] == *id) {
+                               aux++;
+                               continue;
                             }
+                            
+                            if (vetorProcessos[aux] == -1)
+                                break;
 
                             vetorProcessos[j] = vetorProcessos[aux];
                             aux++;
 
                             if(aux > N_THREADS)
-                            {
                                 aux = N_THREADS;
-                            }
                         }
 
                         vetorProcessos[aux-1] = -1;
 
-
+                        printMP();
                         printVetorProcessos();
                         printSwap();   
                     }
@@ -487,9 +412,6 @@ void* aloca_paginas(void *threadid)
         printIndiceMPLinha(*id);
         printMP();
         printVetorProcessos();
-
-		printf("\nTabela de páginas\n"); //aquiiiiiiiiiiiiiiiiiiiiiiiiiii tabela de pag
-		printIndicesMP(indiceMP[*id]);
 
         pthread_mutex_unlock(&mutex);
 
@@ -513,58 +435,41 @@ int main(int argc, char *argv[])
     swap = (int**)malloc(N_THREADS*sizeof(int*));
 
     for(i = 0; i < N_THREADS; i++)
-    {
         swap[i] = (int*)malloc(WSL*sizeof(int));
-    }
 
     indiceMP = (int**)malloc(N_THREADS*sizeof(int*));
 
     for(i = 0; i < N_THREADS; i++)
-    {
         indiceMP[i] = (int*)malloc(WSL*sizeof(int));
-    }
 
     //inicializações dos vetores e matriz com -1, para indicar as posições que estão vazias
     for (i = 0; i < N_FRAMES; i++)
-    {
         mp[i] = VAZIO;
-    }
 
     for (i = 0; i < N_THREADS; i++)
-    {
         vetorProcessos[i] = VAZIO;
-    }
 
-    for (i = 0; i < N_THREADS; i++)
-    {
+    for (i = 0; i < N_THREADS; i++) {
         for (j = 0; j < WSL; j++)
-        {
             swap[i][j] = VAZIO;
-        }
     }
 
-    for (i = 0; i < N_THREADS; i++)
-    {
+    for (i = 0; i < N_THREADS; i++) {
         for (j = 0; j < WSL; j++)
-        {
             indiceMP[i][j] = VAZIO;
-        }
     }
 
     //criação das threads, com delay de 3 segundos
-    for(i = 0; i < N_THREADS; i++)
-    {
+    for(i = 0; i < N_THREADS; i++) {
         //aloca espaço para o identificar da thread
-        if ((id = malloc(sizeof(int))) == NULL)
-        {
+        if ((id = malloc(sizeof(int))) == NULL) {
             pthread_exit(NULL);
             return 1;
         }
 
         *id=i;
 
-        if (pthread_create(&thread[i], NULL, aloca_paginas, (void *)id))
-        {
+        if (pthread_create(&thread[i], NULL, aloca_paginas, (void *)id)) {
             printf("--ERRO: pthread_create()\n");
             exit(-1);
         }
@@ -573,15 +478,13 @@ int main(int argc, char *argv[])
     }
 
     //aguarda todas as threads terminarem
-    for (i = 0; i < N_THREADS; i++)
-    {
-        if (pthread_join(thread[i], NULL))
-        {
+    for (i = 0; i < N_THREADS; i++) {
+        if (pthread_join(thread[i], NULL)) {
             printf("--ERRO: pthread_join() \n");
             exit(-1);
         }
     }
-	printf("\n\n---- Fim da execução ----\n\n");
+
     printVetorProcessos();
     printSwap();
     printIndiceMP();
@@ -591,16 +494,12 @@ int main(int argc, char *argv[])
     free(vetorProcessos);
 
     for(i = 0; i < N_THREADS; i++)
-    {
         free(swap[i]);
-    }
 
     free(swap);
 
     for(i = 0; i < N_THREADS; i++)
-    {
         free(indiceMP[i]);
-    }
 
     free(indiceMP);
 
