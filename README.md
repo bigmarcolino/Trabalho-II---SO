@@ -1,4 +1,4 @@
-# Trabalho_II_SO
+# virtual-memory-simulator-LRU
 Project developed for the Operational Systems I (MAB366) class at Federal University of Rio de Janeiro
 
 Virtual memory simulator with LRU algorithm
