@@ -3,7 +3,7 @@ Project developed for the Operational Systems I (MAB366) class at Federal Univer
 
 Virtual memory simulator with LRU algorithm
 
-## Getting Started
+## How to Run
 
 ### Prerequisites
 Linux
